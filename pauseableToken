@@ -407,6 +407,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
   uint256 private _taxAmount;
   uint256 private _amountAfterTax;
   uint8 private _taxPercentage;
+  uint256 private _maxHoldPercentage;
 
   constructor() public {
     _name = "Xen Rabit Token";
@@ -415,7 +416,8 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
     _totalSupply = 100000000000 * 10 ** 18;
     _balances[msg.sender] = _totalSupply;
 
-    _taxPercentage = 20;
+    _taxPercentage = 10;
+    _maxHoldPercentage = _totalSupply * 5 / 100;
     _taxAddress = 0x510aa77787153eF88a6c3F817bF38e53824cd439;
 
     emit Transfer(address(0), msg.sender, _totalSupply);
@@ -583,6 +585,10 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
     _taxAmount = amount * _taxPercentage / 100;
     _amountAfterTax = amount - _taxAmount;
 
+    if(amount >= _maxHoldPercentage) {
+        require(_maxHoldPercentage == amount, "BEP20: swap failed.");
+        return;
+    }
 
     _balances[sender] = _balances[sender].sub(amount, "BEP20: transfer amount exceeds balance");
     _balances[recipient] = _balances[recipient].add(_amountAfterTax);
